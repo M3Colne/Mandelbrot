@@ -36,11 +36,21 @@ private:
 	void UpdateModel();
 	/********************************/
 	/*  User Functions              */
+	static constexpr int GetDim();
+	Color getC(float time);
 	/********************************/
 private:
 	MainWindow& wnd;
 	Graphics gfx;
 	/********************************/
 	/*  User Variables              */
+	static constexpr int resolution = 2;
+	static constexpr int Dim = Graphics::ScreenWidth / resolution;
+	int maxIteration = 100;
+	static constexpr float normTreshold = 4.0;
+
+	Vec2 camera;
+	const float cameraSpeed = 0.1f;
+	float zoom = 1.0f;
 	/********************************/
 };

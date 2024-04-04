@@ -6,6 +6,7 @@ template<typename T>
 class Vec2_
 {
 public:
+	Vec2_() = default;
 	Vec2_(T x_in, T y_in)
 		:
 		x(x_in),
@@ -59,10 +60,6 @@ public:
 	{
 		return x * x + y * y;
 	}
-	Vec2_& Normalize()
-	{
-		return *this = GetNormalized();
-	}
 	Vec2_ GetNormalized() const
 	{
 		const T len = GetLength();
@@ -72,82 +69,34 @@ public:
 		}
 		return *this;
 	}
-	float GetAngle(const float relativeToWhat) const
+	float GetAngle(const float absRelative) const
 	{
-		//RelativeToWhat must be between 0 and 2*PI
-		//The return value can be between -PI and +PI
-		const float PI = 3.1415926f;
-		Vec2_<float> a = this->GetNormalized();
-		Vec2_<float> r(float(cos(relativeToWhat)), float(sin(relativeToWhat)));
-
-		//Finding the angle relative to 0
-		float absAngle = 0.0f;
-		if (relativeToWhat <= PI)
-		{
-			absAngle = GetAngleBetween(a, Vec2_<float>(1.0f, 0.0f));
-			if (a.y < 0)
-			{
-				absAngle = 2 * PI - absAngle;
-			}
-		}
-		else
-		{
-			absAngle = GetAngleBetween(a, Vec2_<float>(1.0f, 0.0f));
-			if (a.y < 0)
-			{
-				absAngle = 2 * PI - absAngle;
-			}
-			else
-			{
-				absAngle += 2 * PI;
-			}
-		}
-
-		if (absAngle >= relativeToWhat && absAngle <= relativeToWhat + PI)
-		{
-			return GetAngleBetween(a, r);
-		}
-		else
-		{
-			return -GetAngleBetween(a, r);
-		}
+		//RelativeToWhat must be an absolute angle ( between 0 and 2PI )
+		//It will be between 0 and PI and never negative
+		const float a = GetAngle() + (absRelative > 3.1415926f ? 6.2831853f - absRelative : -absRelative);
+		return a > 3.1415926f ? a - 6.2831853f : a;
 	}
 	float GetAngle() const
 	{
-		if (this->y < 0)
-		{
-			return 6.2831853f - acos(this->GetNormalized().x);
-		}
-
-		return acos(this->GetNormalized().x);
+		//It will be between 0 and 2PI
+		return y < 0 ? 6.2831853f + atan2(y, x) : atan2(y, x);
 	}
-	float GetAngleBetween(const Vec2_ a, const Vec2_ b)
+	static float GetAngleBetween(const Vec2_& a, const Vec2_& b)
 	{
 		//It will be between 0 and PI and never negative
-		//acos((this->x * b.x + this->y * b.y) / (this->GetLength() * b.GetLength()));
-		//Dot product
-		T dp = a.x * b.x + a.y * b.y;
-		T u = a.GetLength();
-		T v = b.GetLength();
-
-		T beta = dp / (u * v);
-
-		return acos(beta);
-	}
-	Vec2_ Rotate(float dTheta)
-	{
-		return *this = GetRotated(dTheta);
+		return acos(DotProduct(a, b) / (a.GetLength() * b.GetLength()));
 	}
 	Vec2_ GetRotated(float dTheta) const
 	{
-		const float theta = GetAngle();
-		return Vec2_(cos(theta + dTheta), sin(theta + dTheta)) * GetLength();
+		const float c = cos(dTheta);
+		const float s = sin(dTheta);
+		return Vec2_(x * c - y * s, x * s + y * c);
 	}
-	static float DotProduct(const Vec2_& a, const Vec2_& b)
+	static float Dot(const Vec2_& a, const Vec2_& b)
 	{
-		return a.x * b.x + a.y * b.y;
-	}   
-	Vec2_ GetNormalCounterClockwise() const
+		return float(a.x * b.x + a.y * b.y);
+	}
+	Vec2_ GetNormal() const
 	{
 		return { -y, x };
 	}
